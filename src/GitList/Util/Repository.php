@@ -161,30 +161,31 @@ class Repository
         return false;
     }
 
-    public function getReadme($repository, $branch = null, $path)
+    public function getReadme($repository, $branch = null, $path = '')
     {
-	    var_dump($path);
-	    var_dump($branch);
-        $files = $repository->getTree($branch . ':' . $path)->output();
-        if ($branch === null) {
-           $branch = $repository->getHead();
-	}
-	foreach ($files as $file){
-		echo("<pre>");
-		var_dump($file);
-		echo("</pre>");
-	}
-	
-        foreach ($files as $file) {
-		if (preg_match('/^readme*/i', $file['name'])) {
-			echo("$path{$file['name']}<br>");
-                return array(
-                    'filename' => $file['name'],
-                    'content'  => $repository->getBlob("$branch:\"$path{$file['name']}\"")->output()
-                );
+        while(1)
+        {
+            $files = $repository->getTree($branch . ':' . $path)->output();
+            if ($branch === null) {
+               $branch = $repository->getHead();
+	    }
+	    
+            foreach ($files as $file) {
+	    	if (preg_match('/^readme*/i', $file['name'])) {
+                    return array(
+                        'filename' => $file['name'],
+                        'content'  => $repository->getBlob("$branch:\"$path{$file['name']}\"")->output()
+                    );
+                }
             }
+            if($path === '') break;
+            $temp = strrpos($path, "/", -2);
+            if($temp === false)
+                $temp = 0;
+	    else
+                $temp = $temp+1;
+            $path = substr($path, 0, $temp);
         }
-
         return array();
     }
 
